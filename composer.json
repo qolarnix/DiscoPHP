@@ -1,0 +1,8 @@
+{
+    "require": {
+        "amphp/websocket-client": "^2.0",
+        "amphp/amp": "^3.0",
+        "revolt/event-loop": "^1.0",
+        "monolog/monolog": "^3.7"
+    }
+}
