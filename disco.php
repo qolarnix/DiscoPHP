@@ -14,7 +14,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 const el = PHP_EOL;
 const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
-CONST TOKEN = 'MTI5ODQ4MjMyODM3NjU3Mzk3Mg.GeUKPq.HEOPnaQhk0tF3BkddocDm0DpaepkfDRqN_uw4w';
+CONST TOKEN = '';
 
 $logger = new Logger('disco');
 $logger->pushHandler(new StreamHandler('php://stdout'));
