@@ -12,9 +12,11 @@ use function Amp\Websocket\Client\connect;
 
 require __DIR__ . '/vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 const el = PHP_EOL;
 const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
-CONST TOKEN = '';
 
 $logger = new Logger('disco');
 $logger->pushHandler(new StreamHandler('php://stdout'));
@@ -74,7 +76,7 @@ function handleIdentify(WebsocketConnection $conn, Logger $logger) {
     $identity = (object) [
         'op' => 2,
         'd' => [
-            'token' => TOKEN,
+            'token' => $_ENV['DISCORD_TOKEN'],
             'intents' => 513,
             'properties' => [
                 'os' => 'linux',
