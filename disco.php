@@ -12,41 +12,40 @@ use function Amp\Websocket\Client\connect;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
-
-const el = PHP_EOL;
 const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
 
-$logger = new Logger('disco');
-$logger->pushHandler(new StreamHandler('php://stdout'));
+function disco(int $gatewayIntents, string $botToken, string $botName) {
+    $logger = new Logger('disco');
+    $logger->pushHandler(new StreamHandler('php://stdout'));
+    $handshake = new WebsocketHandshake(GATEWAY);
 
-$handshake = new WebsocketHandshake(GATEWAY);
+    try {
+        $conn = connect($handshake);
     
-try {
-    $conn = connect($handshake);
-
-    $logger->info('Discord gateway connection success!');
-
-    foreach($conn as $msg) {
-        $payload = $msg->buffer();
-        $parsed = json_decode($payload);
-
-        print_r($parsed);
-
-        switch($parsed->op) {
-            case 10: 
-                handleHeartbeat($conn, $logger, $parsed);
-                handleIdentify($conn, $logger);
-                break;
-            case 11: 
-                $logger->info('Heartbeat acknowledged!');
-                break;
+        $logger->info('Discord gateway connection success!');
+    
+        foreach($conn as $msg) {
+            $payload = $msg->buffer();
+            $parsed = json_decode($payload);
+    
+            print_r($parsed);
+    
+            switch($parsed->op) {
+                case 10: 
+                    handleHeartbeat($conn, $logger, $parsed);
+                    handleIdentify($conn, $logger, $gatewayIntents, $botToken, $botName);
+                    break;
+                case 11: 
+                    $logger->info('Heartbeat acknowledged!');
+                    break;
+            }
         }
     }
-}
-catch(\Throwable | Exception $e) {
-    $logger->error('Discord gateway connection failed! ' . $e->getMessage());
+    catch(\Throwable | Exception $e) {
+        $logger->error('Discord gateway connection failed! ' . $e->getMessage());
+    }
+
+    EventLoop::run();
 }
 
 function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $parsed): void {
@@ -72,21 +71,19 @@ function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $pars
     });
 }
 
-function handleIdentify(WebsocketConnection $conn, Logger $logger) {
+function handleIdentify(WebsocketConnection $conn, Logger $logger, int $intents, string $token, string $name) {
     $identity = (object) [
         'op' => 2,
         'd' => [
-            'token' => $_ENV['DISCORD_TOKEN'],
-            'intents' => 513,
+            'token' => $token,
+            'intents' => $intents,
             'properties' => [
                 'os' => 'linux',
-                'browser' => 'DiscoPHP',
-                'device' => 'DiscoPHP'
+                'browser' => $name,
+                'device' => $name
             ]
         ]
     ];
     $conn->sendText(json_encode($identity));
     $logger->notice('Identity payload sent!');
 }
-
-EventLoop::run();
