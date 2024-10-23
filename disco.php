@@ -14,6 +14,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 const el = PHP_EOL;
 const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
+CONST TOKEN = 'MTI5ODQ4MjMyODM3NjU3Mzk3Mg.GeUKPq.HEOPnaQhk0tF3BkddocDm0DpaepkfDRqN_uw4w';
 
 $logger = new Logger('disco');
 $logger->pushHandler(new StreamHandler('php://stdout'));
@@ -32,8 +33,13 @@ try {
         print_r($parsed);
 
         switch($parsed->op) {
-            case 10: handleHeartbeat($conn, $logger, $parsed); break;
-            case 11: $logger->info('Heartbeat acknowledged!'); break;
+            case 10: 
+                handleHeartbeat($conn, $logger, $parsed);
+                handleIdentify($conn, $logger);
+                break;
+            case 11: 
+                $logger->info('Heartbeat acknowledged!');
+                break;
         }
     }
 }
@@ -62,6 +68,23 @@ function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $pars
             $logger->notice('Heartbeat sent!');
         });
     });
+}
+
+function handleIdentify(WebsocketConnection $conn, Logger $logger) {
+    $identity = (object) [
+        'op' => 2,
+        'd' => [
+            'token' => TOKEN,
+            'intents' => 513,
+            'properties' => [
+                'os' => 'linux',
+                'browser' => 'DiscoPHP',
+                'device' => 'DiscoPHP'
+            ]
+        ]
+    ];
+    $conn->sendText(json_encode($identity));
+    $logger->notice('Identity payload sent!');
 }
 
 EventLoop::run();
