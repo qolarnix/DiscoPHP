@@ -11,31 +11,30 @@ use Revolt\EventLoop;
 use function Amp\Websocket\Client\connect;
 
 require __DIR__ . '/vendor/autoload.php';
-
-const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
+require __DIR__ . '/constants.php';
 
 function disco(int $gatewayIntents, string $botToken, string $botName) {
     $logger = new Logger('disco');
     $logger->pushHandler(new StreamHandler('php://stdout'));
-    $handshake = new WebsocketHandshake(GATEWAY);
+    $handshake = new WebsocketHandshake(GATEWAY::JSON->value);
 
     try {
         $conn = connect($handshake);
-    
         $logger->info('Discord gateway connection success!');
     
         foreach($conn as $msg) {
             $payload = $msg->buffer();
             $parsed = json_decode($payload);
     
+            // debug payload
             print_r($parsed);
     
             switch($parsed->op) {
-                case 10: 
+                case OPCODE::ten->value:
                     handleHeartbeat($conn, $logger, $parsed);
                     handleIdentify($conn, $logger, $gatewayIntents, $botToken, $botName);
                     break;
-                case 11: 
+                case OPCODE::eleven->value: 
                     $logger->info('Heartbeat acknowledged!');
                     break;
             }

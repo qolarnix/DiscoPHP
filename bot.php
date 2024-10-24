@@ -11,5 +11,5 @@ $dotenv->load();
 disco(
     gatewayIntents: 513, 
     botToken: $_ENV['DISCORD_TOKEN'],
-    botName: 'DiscoPHP'
+    botName: 'Hailstone'
 );
