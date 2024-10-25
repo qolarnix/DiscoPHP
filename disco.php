@@ -67,7 +67,9 @@ function handleInteraction(object $data) {
     $interactionToken = $data->token;
 
     switch($commandType) {
-        case 1: handleCommand($userName, $commandName, $interactionId, $interactionToken);
+        case 1: 
+            handleCommand($userName, $commandName, $interactionId, $interactionToken); 
+            break;
     }
 }
 
