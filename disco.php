@@ -47,7 +47,7 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
                     break;
 
                 case OPCODE::HEARTBEAT_ACK->value: 
-                    $logger->info('Heartbeat acknowledged!');
+                    $logger->notice('Heartbeat acknowledged!');
                     break;
             }
         }
