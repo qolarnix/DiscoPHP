@@ -14,7 +14,7 @@ use function Amp\Websocket\Client\connect;
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/constants.php';
 
-function disco(int $gatewayIntents, string $botToken, string $botName) {
+function disco(int $gatewayIntents, string $botToken, string $botName, array $commands) {
     $logger = new Logger('disco');
     $handler = new StreamHandler('php://stdout');
     $handler->setFormatter(new LineFormatter(null, null, false, true));
@@ -24,7 +24,7 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
     try {
         $conn = connect($handshake);
         $logger->info('Discord gateway connection success!');
-    
+
         foreach($conn as $msg) {
             $payload = $msg->buffer();
             $parsed = json_decode($payload);
@@ -39,6 +39,7 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
                 case OPCODE::DISPATCH->value:
                     $logger->notice('Event triggered: ' . $parsed->event);
                     if($parsed->event === 'MESSAGE_CREATE') logMessage($logger, $parsed);
+                    if($parsed->event === 'READY') handleReady($logger, $parsed->data, $commands);
                     break;
 
                 case OPCODE::HELLO->value:
@@ -63,6 +64,14 @@ function logMessage(Logger $logger, object $parsed) {
     $sender = $parsed->data->author->global_name;
     $content = $parsed->data->content;
     $logger->notice($sender . ': ' . $content);
+}
+
+function handleReady(Logger $logger, object $data, array $commands) {
+    $appId = $data->application->id;
+    $logger->notice('App ID: ' . $appId);
+    $logger->warning('No commands!: ');
+    var_dump($commands);
+    // registerCommands($commands);
 }
 
 function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $parsed): void {
