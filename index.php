@@ -9,7 +9,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 disco(
-    gatewayIntents: 513, 
+    gatewayIntents: 2130793, 
     botToken: $_ENV['DISCORD_TOKEN'],
     botName: 'Hailstone'
 );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\Client\WebsocketHandshake;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Revolt\EventLoop;
@@ -15,7 +16,9 @@ require __DIR__ . '/constants.php';
 
 function disco(int $gatewayIntents, string $botToken, string $botName) {
     $logger = new Logger('disco');
-    $logger->pushHandler(new StreamHandler('php://stdout'));
+    $handler = new StreamHandler('php://stdout');
+    $handler->setFormatter(new LineFormatter(null, null, false, true));
+    $logger->pushHandler($handler);
     $handshake = new WebsocketHandshake(GATEWAY::JSON->value);
 
     try {
@@ -27,9 +30,12 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
             $parsed = json_decode($payload);
     
             // debug payload
-            print_r($parsed);
+            // print_r($parsed);
     
             switch($parsed->op) {
+                case OPCODE::zero->value:
+                    if($parsed->t === 'MESSAGE_CREATE') handleMessage($logger, $parsed);
+                    break;
                 case OPCODE::ten->value:
                     handleHeartbeat($conn, $logger, $parsed);
                     handleIdentify($conn, $logger, $gatewayIntents, $botToken, $botName);
@@ -45,6 +51,12 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
     }
 
     EventLoop::run();
+}
+
+function handleMessage(Logger $logger, object $parsed) {
+    $sender = $parsed->d->author->global_name;
+    $content = $parsed->d->content;
+    $logger->notice($sender . ': ' . $content);
 }
 
 function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $parsed): void {
