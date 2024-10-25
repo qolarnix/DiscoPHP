@@ -91,3 +91,15 @@ registerCommand(
         return $result ? 'heads' : 'tails';
     }
 );
+
+registerCommand(
+    name: 'aura',
+    desc: 'how much aura do you have?',
+    type: 1,
+    callback: function(): string {
+        do { $result = mt_rand(-100000, 100000); } while($result === 0);
+        return $result > 0
+            ? "Plus " . $result . " Aura!"
+            : "Minus " . abs($result) . " Aura";
+    }
+);
