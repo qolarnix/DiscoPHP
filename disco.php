@@ -32,8 +32,8 @@ function disco(Logger $logger, int $gatewayIntents, string $botToken, string $bo
             switch($parsed->opcode) {
                 case OPCODE::DISPATCH->value:
                     $logger->notice('Event triggered: ' . $parsed->event);
-                    if($parsed->event === 'MESSAGE_CREATE') logMessage($logger, $parsed);
-                    if($parsed->event === 'INTERACTION_CREATE') handleInteraction($logger, $parsed->data);
+                    if($parsed->event === 'MESSAGE_CREATE') logMessage($logger, $parsed->data);
+                    if($parsed->event === 'INTERACTION_CREATE') handleInteraction($parsed->data);
                     break;
 
                 case OPCODE::HELLO->value:
@@ -53,21 +53,22 @@ function disco(Logger $logger, int $gatewayIntents, string $botToken, string $bo
     }
 }
 
-function logMessage(Logger $logger, object $parsed) {
-    $sender = $parsed->data->author->global_name;
-    $content = $parsed->data->content;
+function logMessage(Logger $logger, object $data) {
+    $sender = $data->author->global_name ?? $data->author->username;
+    $content = $data->content;
     $logger->notice($sender . ': ' . $content);
 }
 
-function handleInteraction(Logger $logger, object $data) {
-    print_r($data);
-
+function handleInteraction(object $data) {
     $userName = $data->member->user->global_name;
     $commandName = $data->data->name;
+    $commandType = $data->data->type;
     $interactionId = $data->id;
     $interactionToken = $data->token;
 
-    handleCommand($userName, $commandName, $interactionId, $interactionToken);
+    switch($commandType) {
+        case 1: handleCommand($userName, $commandName, $interactionId, $interactionToken);
+    }
 }
 
 function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $parsed): void {

@@ -33,8 +33,7 @@ function setGlobalCommands(Logger $logger, string $appId, string $token) {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($cmd));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($ch);
+        curl_exec($ch);
 
         if(curl_errno($ch)) {
             print_r(curl_error($ch));
@@ -42,7 +41,6 @@ function setGlobalCommands(Logger $logger, string $appId, string $token) {
         }
         else {
             $logger->notice('Set application command: ' . $cmd->name);
-            print_r($response);
         }
     }
 }
@@ -58,8 +56,6 @@ function handleCommand(string $userName, string $commandName, string $interactio
         'type' => 4,
         'data' => ['content' => $content],
     ];
-
-    print_r($payload);
 
     $ch = curl_init($endpoint);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -83,5 +79,15 @@ registerCommand(
     type: 1,
     callback: function(string $userName): string {
         return 'bora ' . $userName;
+    }
+);
+
+registerCommand(
+    name: 'coinflip',
+    desc: 'flip a coin!',
+    type: 1,
+    callback: function(): string {
+        $result = mt_rand(0, 1);
+        return $result ? 'heads' : 'tails';
     }
 );

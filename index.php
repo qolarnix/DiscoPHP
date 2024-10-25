@@ -19,7 +19,7 @@ $handler->setFormatter(new LineFormatter(null, null, false, true));
 $logger->pushHandler($handler);
 
 $token = $_ENV['DISCORD_TOKEN'];
-$appId = '1298942628498509835';
+$appId = $_ENV['DISCORD_APP_ID'];
 
 setGlobalCommands(
     logger: $logger, 
