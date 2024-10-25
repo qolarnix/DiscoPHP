@@ -28,19 +28,25 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
         foreach($conn as $msg) {
             $payload = $msg->buffer();
             $parsed = json_decode($payload);
+            $parsed = (object) [
+                'opcode' => $parsed->op,
+                'data' => $parsed->d,
+                'sequence' => $parsed->s,
+                'event' => $parsed->t,
+            ];
     
-            // debug payload
-            // print_r($parsed);
-    
-            switch($parsed->op) {
-                case OPCODE::zero->value:
-                    if($parsed->t === 'MESSAGE_CREATE') handleMessage($logger, $parsed);
+            switch($parsed->opcode) {
+                case OPCODE::DISPATCH->value:
+                    $logger->notice('Event triggered: ' . $parsed->event);
+                    if($parsed->event === 'MESSAGE_CREATE') logMessage($logger, $parsed);
                     break;
-                case OPCODE::ten->value:
+
+                case OPCODE::HELLO->value:
                     handleHeartbeat($conn, $logger, $parsed);
                     handleIdentify($conn, $logger, $gatewayIntents, $botToken, $botName);
                     break;
-                case OPCODE::eleven->value: 
+
+                case OPCODE::HEARTBEAT_ACK->value: 
                     $logger->info('Heartbeat acknowledged!');
                     break;
             }
@@ -53,14 +59,14 @@ function disco(int $gatewayIntents, string $botToken, string $botName) {
     EventLoop::run();
 }
 
-function handleMessage(Logger $logger, object $parsed) {
-    $sender = $parsed->d->author->global_name;
-    $content = $parsed->d->content;
+function logMessage(Logger $logger, object $parsed) {
+    $sender = $parsed->data->author->global_name;
+    $content = $parsed->data->content;
     $logger->notice($sender . ': ' . $content);
 }
 
 function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $parsed): void {
-    $interval = $parsed->d->heartbeat_interval;
+    $interval = $parsed->data->heartbeat_interval;
     $jitter = mt_rand() / mt_getrandmax();
     $initDelay = $interval * $jitter;
 
@@ -68,7 +74,7 @@ function handleHeartbeat(WebsocketConnection $conn, Logger $logger, object $pars
 
     $keepalive = (object) [
         'op' => 1,
-        'd' => $parsed->s ?? null
+        'd' => $parsed->sequence ?? null
     ];
 
     EventLoop::delay($initDelay / 1000, function() use($conn, $keepalive, $logger, $interval): void {

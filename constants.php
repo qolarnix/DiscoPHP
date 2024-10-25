@@ -7,15 +7,16 @@ enum GATEWAY: string {
 }
 
 enum OPCODE: int {
-    case zero = 0;
-    case one = 1;
-    case two = 2;
-    case three = 3;
-    case four = 4;
-    case six = 6;
-    case seven = 7;
-    case eight = 8;
-    case nine = 9;
-    case ten = 10;
-    case eleven = 11;
+    case DISPATCH = 0;
+    case HEARTBEAT = 1;
+    case IDENTIFY = 2;
+    case PRESENCE_UPDATE = 3;
+    case VOICE_STATE_UPDATE = 4;
+    case RESUME = 6;
+    case RECONNECT = 7;
+    case REQUEST_GUILD_MEMBERS = 8;
+    case INVALID_SESSION = 9;
+    case HELLO = 10;
+    case HEARTBEAT_ACK = 11;
+    case REQUEST_SOUNDBOARD_SOUNDS = 31;
 }
