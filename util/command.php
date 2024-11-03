@@ -79,7 +79,7 @@ function handleCommand(string $userName, string $commandName, string $interactio
     $headers = ['Content-Type: application/json'];
     $payload = [
         'type' => 4,
-        'data' => ['content' => $content],
+        'data' => ['content' => $content, 'embed' => 'test'],
     ];
 
     $response = endpointPost($headers, $endpoint, $payload);
