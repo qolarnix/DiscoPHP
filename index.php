@@ -8,6 +8,7 @@ use Monolog\Logger;
 
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/disco.php';
+require __DIR__ . '/util/functions.php';
 require __DIR__ . '/util/command.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -22,7 +23,6 @@ $token = $_ENV['DISCORD_TOKEN'];
 $appId = $_ENV['DISCORD_APP_ID'];
 
 setGlobalCommands(
-    logger: $logger, 
     appId: $appId, 
     token: $token
 );

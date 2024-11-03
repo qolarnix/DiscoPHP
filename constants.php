@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 enum GATEWAY: string {
     case JSON = 'wss://gateway.discord.gg/?v=10&encoding=json';
+    case API = 'https://discord.com/api/v10';
 }
 
 enum OPCODE: int {

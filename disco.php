@@ -33,7 +33,10 @@ function disco(Logger $logger, int $gatewayIntents, string $botToken, string $bo
                 case OPCODE::DISPATCH->value:
                     $logger->notice('Event triggered: ' . $parsed->event);
                     if($parsed->event === 'MESSAGE_CREATE') logMessage($logger, $parsed->data);
-                    if($parsed->event === 'INTERACTION_CREATE') handleInteraction($parsed->data);
+                    if($parsed->event === 'INTERACTION_CREATE') {
+                        // print_r($parsed->data);
+                        handleInteraction($parsed->data);
+                    }
                     break;
 
                 case OPCODE::HELLO->value:

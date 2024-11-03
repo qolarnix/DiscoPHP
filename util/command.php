@@ -16,61 +16,74 @@ function registerCommand(string $name, string $desc, callable $callback, int $ty
     ];
 }
 
-function setGlobalCommands(Logger $logger, string $appId, string $token) {
+function getCommands(): array {
+    $token = $_ENV['DISCORD_TOKEN'];
+    $appId = $_ENV['DISCORD_APP_ID'];
+
+    $headers = ['Authorization: Bot ' . $token];
+    $endpoint = GATEWAY::API->value . '/applications/' . $appId . '/commands';
+
+    $response = endpointRequest($headers, $endpoint, 'GET');
+    $commands = $response->result;
+    $commands = json_decode($commands);
+
+    $list = [];
+    $count = 0;
+    foreach($commands as $cmd) {
+        $list[$count]['name'] = $cmd->name;
+        $list[$count]['desc'] = $cmd->description;
+        $count++;
+    }
+    return $list;
+}
+
+function deleteCommand(string $commandId) {
+    $token = $_ENV['DISCORD_TOKEN'];
+    $appId = $_ENV['DISCORD_APP_ID'];
+
+    $headers = ['Authorization: Bot ' . $token];
+    $endpoint = GATEWAY::API->value . '/applications/' . $appId . '/commands/' . $commandId;
+    
+    $response = endpointRequest($headers, $endpoint, 'DELETE');
+    print_r($response);
+}
+
+function setGlobalCommands(string $appId, string $token) {
     $headers = [
         'Authorization: Bot ' . $token,
         'Content-Type: application/json'
     ];
-    $endpoint = 'https://discord.com/api/v10/applications/'. $appId .'/commands';
+    $endpoint = GATEWAY::API->value.'/applications/'.$appId.'/commands';
 
     global $commands;
     foreach($commands as $cmd) {
         unset($cmd['callback']);
-        $cmd = (object)$cmd;
 
-        $ch = curl_init($endpoint);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($cmd));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_exec($ch);
-
-        if(curl_errno($ch)) {
-            print_r(curl_error($ch));
-            $logger->notice('Failed to set application command: ' . $cmd->name);
-        }
-        else {
-            $logger->notice('Set application command: ' . $cmd->name);
+        $response = endpointPost($headers, $endpoint, $cmd);
+        if($response->error) {
+            print_r($response->error);
+        } else {
+            print_r($response->result);
         }
     }
 }
 
+/**
+ * @desc Handle command response
+ */
 function handleCommand(string $userName, string $commandName, string $interactionId, string $interactionToken) {
     global $commands;
 
     $content = call_user_func($commands[$commandName]['callback'], $userName);
-    $endpoint = 'https://discord.com/api/v10/interactions/'.$interactionId.'/'.$interactionToken.'/callback';
+    $endpoint = GATEWAY::API->value.'/interactions/'.$interactionId.'/'.$interactionToken.'/callback';
     $headers = ['Content-Type: application/json'];
-
     $payload = [
         'type' => 4,
         'data' => ['content' => $content],
     ];
 
-    $ch = curl_init($endpoint);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = curl_exec($ch);
-
-    if(curl_errno($ch)) {
-        print_r(curl_error($ch));
-    }
-    else {
-        print_r($response);
-    }
+    $response = endpointPost($headers, $endpoint, $payload);
+    print_r($response);
 }
 
 registerCommand(
@@ -83,23 +96,11 @@ registerCommand(
 );
 
 registerCommand(
-    name: 'coinflip',
-    desc: 'flip a coin!',
+    name: 'list',
+    desc: 'list commands',
     type: 1,
-    callback: function(): string {
-        $result = mt_rand(0, 1);
-        return $result ? 'heads' : 'tails';
-    }
-);
-
-registerCommand(
-    name: 'aura',
-    desc: 'how much aura do you have?',
-    type: 1,
-    callback: function(): string {
-        do { $result = mt_rand(-100000, 100000); } while($result === 0);
-        return $result > 0
-            ? "Plus " . $result . " Aura!"
-            : "Minus " . abs($result) . " Aura";
+    callback: function() {
+        $commands = getCommands();
+        return json_encode($commands);
     }
 );
